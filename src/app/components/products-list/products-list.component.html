@@ -1,0 +1,24 @@
+<div class="products-container">
+    @for (product of products; track product.id) {
+        <mat-card class="product-card">
+            <mat-card-header>
+                <mat-card-title>{{product.name}}</mat-card-title>
+                <mat-card-subtitle>{{product.description}}</mat-card-subtitle>
+            </mat-card-header>
+            <img mat-card-image
+            src="../../../assets/2016-09-06-what-is-a-product.webp" alt="Photo of a Shiba Inu">
+            <mat-card-content>
+                <p>
+                    {{product.description}}
+                </p>
+            </mat-card-content>
+            <mat-card-actions>
+                <button mat-button (click)="getDetails(product)">Details</button>
+                <button mat-button (click)="deleteProduct(product)">Delete</button>
+                <button mat-icon-button [color]="product.isLiked ? 'warn': 'primary'"><mat-icon>favorite</mat-icon></button>
+            </mat-card-actions>
+        </mat-card>
+      } @empty {
+        Empty list of products
+      }
+</div>
