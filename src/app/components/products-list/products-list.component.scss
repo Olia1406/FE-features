@@ -1,10 +1,47 @@
+.filter-btn {
+  margin: 20px 20px 10px;
+}
+
 .products-container {
   display: flex;
+  justify-content: flex-start;
   flex-wrap: wrap;
-  padding: 20px;
-  gap: 20px;
+  padding: 0 10px 20px;
 }
 
 .product-card {
-  max-width: 300px;
+  width: 23%;
+  margin: 1%;
+
+  @media screen and (max-width: 1000px){
+    width: 31%;
+  }
+
+  @media screen and (max-width: 700px){
+    width: 48%;
+  }
+
+  .product-image {
+    width: 100%;
+    max-width: max-content;
+    height: 224px;
+    margin: 0 auto;
+  }
+}
+
+.drawer-container {
+  width: 100%;
+  min-height: 300px;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+.sidenav-section {
+  padding: 20px;
+  background-color: whitesmoke;
+  border-bottom: 1px solid lightgrey;
+
+  h4 {
+    min-width: 200px;
+    margin-bottom: 10px;
+  }
 }

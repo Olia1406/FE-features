@@ -1,0 +1,1 @@
+export const PRODUCT_CATEGORIES = [ 'phone', 'notebook', 'player']

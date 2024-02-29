@@ -1,12 +1,24 @@
-<div class="products-container">
-    @for (product of products; track product.id) {
+<mat-drawer-container class="drawer-container" hasBackdrop>
+    <mat-drawer #drawer class="sidenav" mode="over">
+       <section class="sidenav-section" [formGroup]="categoriesForm">
+        <h4>Select category:</h4>
+        @for (category of categories; track category) {
+           <p><mat-checkbox [formControlName]="category">{{category}}</mat-checkbox></p>
+        }
+      </section>
+    </mat-drawer>
+    <button type="button" mat-flat-button color="accent" (click)="drawer.toggle()" class="filter-btn">
+        Filters <mat-icon>filter_alt</mat-icon>
+     </button>
+    <div class="products-container">
+        @for (product of products; track product.id) {
         <mat-card class="product-card">
             <mat-card-header>
                 <mat-card-title>{{product.name}}</mat-card-title>
                 <mat-card-subtitle>{{product.description}}</mat-card-subtitle>
             </mat-card-header>
-            <img mat-card-image
-            src="../../../assets/2016-09-06-what-is-a-product.webp" alt="Photo of a Shiba Inu">
+            <img mat-card-image class="product-image" [src]="getImageSrc(product.image)"
+                [alt]="'Photo of' + product.name">
             <mat-card-content>
                 <p>
                     {{product.description}}
@@ -14,11 +26,12 @@
             </mat-card-content>
             <mat-card-actions>
                 <button mat-button (click)="getDetails(product)">Details</button>
-                <button mat-button (click)="deleteProduct(product)">Delete</button>
-                <button mat-icon-button [color]="product.isLiked ? 'warn': 'primary'"><mat-icon>favorite</mat-icon></button>
+                <button mat-icon-button
+                    [color]="product.isLiked ? 'warn': 'primary'"><mat-icon>favorite</mat-icon></button>
             </mat-card-actions>
         </mat-card>
-      } @empty {
+        } @empty {
         Empty list of products
-      }
-</div>
+        }
+    </div>
+</mat-drawer-container>
