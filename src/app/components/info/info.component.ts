@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 
 @Component({
   selector: 'app-info',
@@ -7,6 +7,9 @@ import { Component } from '@angular/core';
   templateUrl: './info.component.html',
   styleUrl: './info.component.scss'
 })
-export class InfoComponent {
+export class InfoComponent implements OnInit {
+
+  ngOnInit(): void { }
 
 }
+

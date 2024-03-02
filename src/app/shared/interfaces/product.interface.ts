@@ -1,8 +1,9 @@
 export interface Product {
-    id?: string;
+    _id?: string;
     name: string;
     description: string;
-    img: any;
+    category: string;
+    image: any;
     price: number;
     isLiked: boolean;
 }

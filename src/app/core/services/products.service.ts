@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpEvent, HttpParams, HttpRequest } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Product } from '../../shared/interfaces/product.interface';
@@ -11,12 +11,24 @@ export class ProductsService {
 
   constructor(private http: HttpClient) { }
 
-  getProductsList(): Observable<Product[]> {
-    return this.http.get<Product[]>(`${URL}api/products`)
+  getProductsList(categorySearchParams: string[] = []): Observable<Product[]> {
+   const categorySearchStr = 'category=' + categorySearchParams.join(',')
+    const options = {
+      params: new HttpParams({
+        fromString: categorySearchStr
+      })
+    }
+    return this.http.get<Product[]>(`${URL}api/products`, options)
   }
 
-  addProduct(productBody: Product): Observable<any> {
-    return this.http.post<any>(`${URL}api/products/create`, productBody)
+  addProduct(productBody: any): Observable<any> {
+    return this.http.post<any>(`${URL}api/products/create`, productBody, {
+      headers: {
+        'Accept': '*/*',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': '*'
+      }
+    })
   }
 
   deleteProduct(productId: string): Observable<string> {
@@ -26,4 +38,5 @@ export class ProductsService {
   getProduct(id: string) {
     return this.http.get<Product[]>(`${URL}api/products/${id}`)
   }
+
 }
