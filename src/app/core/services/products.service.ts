@@ -11,11 +11,11 @@ export class ProductsService {
 
   constructor(private http: HttpClient) { }
 
-  getProductsList(categorySearchParams: string = 'category=phone,player'): Observable<Product[]> {
+  getProductsList(categorySearchParams: string[] = []): Observable<Product[]> {
+   const categorySearchStr = 'category=' + categorySearchParams.join(',')
     const options = {
       params: new HttpParams({
-        // fromObject
-        fromString: categorySearchParams
+        fromString: categorySearchStr
       })
     }
     return this.http.get<Product[]>(`${URL}api/products`, options)
