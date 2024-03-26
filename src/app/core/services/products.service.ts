@@ -4,9 +4,7 @@ import { Observable } from 'rxjs';
 import { Product } from '../../shared/interfaces/product.interface';
 const URL = 'http://localhost:4200/'
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class ProductsService {
 
   constructor(private http: HttpClient) { }

@@ -1,15 +1,39 @@
 <mat-drawer-container class="drawer-container" hasBackdrop>
     <mat-drawer #drawer class="sidenav" mode="over">
-       <section class="sidenav-section" [formGroup]="categoriesForm">
-        <h4>Select category:</h4>
-        @for (category of categories; track category) {
-           <p><mat-checkbox [formControlName]="category">{{category}}</mat-checkbox></p>
-        }
-      </section>
+        <section class="sidenav-section" [formGroup]="categoriesForm">
+            <h4>Select category:</h4>
+            @for (category of categories; track category) {
+            <p><mat-checkbox [formControlName]="category">{{category}}</mat-checkbox></p>
+            }
+        </section>
     </mat-drawer>
-    <button type="button" mat-flat-button color="accent" (click)="drawer.toggle()" class="filter-btn">
-        Filters <mat-icon>filter_alt</mat-icon>
-     </button>
+    <section class="searches-container">
+        <button type="button" mat-flat-button color="accent" (click)="drawer.toggle()" class="filter-btn">
+            Filters <mat-icon>filter_alt</mat-icon>
+        </button>
+
+        <div class="client-searches">
+
+            <mat-form-field class="search-control" appearance="outline" [subscriptSizing]="'dynamic'" >
+                <mat-label>Search by description</mat-label>
+                <input matInput #descriptionSearch>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+                <mat-label>Price sort</mat-label>
+                <mat-select (selectionChange)="onSortTypeSelection($event)">
+                  <mat-option value="asc">Ascending</mat-option>
+                  <mat-option value="desc">Desending</mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <mat-form-field class="search-control" appearance="outline" [subscriptSizing]="'dynamic'" >
+                <mat-label>Search</mat-label>
+                <input [formControl]="searchControl" matInput>
+            </mat-form-field>
+        </div>
+
+    </section>
     <div class="products-container">
         <!-- @for (product of products$ | async; track product.id) { -->
         <mat-card class="product-card" *ngFor="let product of products$ | async">
@@ -21,7 +45,7 @@
                 [alt]="'Photo of' + product.name">
             <mat-card-content>
                 <p>
-                    {{product.description}}
+                    {{product.price | currency}}
                 </p>
             </mat-card-content>
             <mat-card-actions>

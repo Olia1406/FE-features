@@ -9,13 +9,12 @@
     </mat-list>
 
     <span class="product-spacer"></span>
-    <a [routerLink]="['/user']">
-        <button color="accent" mat-icon-button aria-label="Product icon-button with user icon">
+    <a [routerLink]="['/user']" mat-icon-button>
             <mat-icon>person</mat-icon>
-        </button>
     </a>
-    <button mat-icon-button aria-label="Product icon-button with share icon">
-        <mat-icon>share</mat-icon>
-    </button>
+    <a [routerLink]="['/login']" mat-icon-button>
+        <mat-icon>login</mat-icon>
+    </a>
+    
 </mat-toolbar>
 <router-outlet></router-outlet>
