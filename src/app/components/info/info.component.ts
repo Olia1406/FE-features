@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-info',
@@ -9,7 +10,14 @@ import { Component, OnInit } from '@angular/core';
 })
 export class InfoComponent implements OnInit {
 
-  ngOnInit(): void { }
+  constructor(private authServ: AuthService) {}
+
+  ngOnInit(): void {
+    this.authServ.getUserInfo().subscribe((info) => {
+      console.log(info)
+      console.log('isAdmin',this.authServ.isAdmin)
+    })
+   }
 
 }
 

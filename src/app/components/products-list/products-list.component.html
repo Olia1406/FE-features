@@ -21,14 +21,14 @@
 
             <mat-form-field appearance="outline">
                 <mat-label>Price sort</mat-label>
-                <mat-select (selectionChange)="onSortTypeSelection($event)">
+                <mat-select (selectionChange)="onSortTypeSelection($event)" #matSelect>
                   <mat-option value="asc">Ascending</mat-option>
                   <mat-option value="desc">Desending</mat-option>
                 </mat-select>
             </mat-form-field>
 
             <mat-form-field class="search-control" appearance="outline" [subscriptSizing]="'dynamic'" >
-                <mat-label>Search</mat-label>
+                <mat-label>Search by name</mat-label>
                 <input [formControl]="searchControl" matInput>
             </mat-form-field>
         </div>
