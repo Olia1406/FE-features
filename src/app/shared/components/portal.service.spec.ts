@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { CustomModalService } from './custom-modal.service';
+import { PortalService } from './portal.service';
 
-describe('CustomModalService', () => {
-  let service: CustomModalService;
+describe('PortalService', () => {
+  let service: PortalService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(CustomModalService);
+    service = TestBed.inject(PortalService);
   });
 
   it('should be created', () => {

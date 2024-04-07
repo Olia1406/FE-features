@@ -10,8 +10,9 @@ import { ProductsService } from './core/services/products.service';
 import { EX_TOKEN } from './shared/example-token';
 import { Product } from './shared/interfaces/product.interface';
 import { UsersService } from './core/services/users.service';
-import { CustomModalComponent } from './shared/custom modal/custom-modal/custom-modal.component';
+// import { CustomModalComponent } from './shared/custom modal/custom-modal/custom-modal.component';
 import { PortalModule } from '@angular/cdk/portal';
+import { PortalComponent } from './shared/components/portal/portal.component';
 
 @Component({
   selector: 'app-root',
@@ -27,7 +28,8 @@ import { PortalModule } from '@angular/cdk/portal';
     MatButtonModule,
     RouterModule,
     PortalModule,
-    CustomModalComponent
+    PortalComponent
+    // CustomModalComponent
   ],
   providers: [
     ProductsService,
@@ -62,8 +64,6 @@ import { PortalModule } from '@angular/cdk/portal';
 })
 export class AppComponent {
   title = 'FE-features';
-
-  constructor() { }
 
   // + TODO: canActivate на is not loggin на компонентк логін і реєстрацію 
   // error handling, show custom notification use cdk portal 

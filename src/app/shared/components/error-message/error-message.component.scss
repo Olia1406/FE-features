@@ -1,0 +1,17 @@
+.error-message {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 50vw;
+    min-height: 70px;
+    border: 1px solid black;
+    position: fixed;
+    bottom: 10px;
+    left: 25vw;
+    z-index: 100;
+    margin: 0 auto;
+    padding: 4px 20px;
+    color: red;
+    background-color: rgb(235, 198, 198);
+    border-radius: 6px;
+}

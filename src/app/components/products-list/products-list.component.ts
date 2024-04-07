@@ -3,8 +3,12 @@ import {
   Component,
   ElementRef,
   Inject,
+  Injector,
+  OnDestroy,
   OnInit,
+  TemplateRef,
   ViewChild,
+  ViewContainerRef,
 } from '@angular/core';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -13,10 +17,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import {
-  MatSnackBar
-} from '@angular/material/snack-bar';
-
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { ProductsService } from '../../core/services/products.service';
 import { Product } from '../../shared/interfaces/product.interface';
@@ -39,11 +40,12 @@ import {
 import { BehaviorSubject, Observable, combineLatest, fromEvent } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { MatInputModule } from '@angular/material/input';
-import { EX_TOKEN } from '../../shared/example-token';
+import { DATA_INJECTION_TOKEN, EX_TOKEN } from '../../shared/example-token';
 import { MatSelect, MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Params, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
-// import { CustomModalService } from '../../shared/custom modal/custom-modal.service';
+import { PortalService } from '../../shared/components/portal.service';
+import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
 
 @Component({
   selector: 'app-products-list',
@@ -61,15 +63,19 @@ import { AuthService } from '../../core/services/auth.service';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    // CdkPortal,
+    // ComponentPortal
   ],
   templateUrl: './products-list-form.component.html',
   styleUrl: './products-list.component.scss',
 })
-export class ProductsListComponent implements OnInit {
+export class ProductsListComponent implements OnInit, OnDestroy {
   @ViewChild('descriptionSearch', { static: true, read: ElementRef })
   descriptionSearch!: ElementRef;
   @ViewChild('matSelect', { static: true })
   matSelect!: MatSelect;
+  // @ViewChild('portalContent', { read: TemplateRef, static: true }) portalContent!: TemplateRef<unknown>;
+  // @ViewChild(CdkPortal, {static: true }) portalContent!: CdkPortal;
 
   products$!: Observable<Product[]>;
   categoriesForm = this.fb.group({});
@@ -89,14 +95,16 @@ export class ProductsListComponent implements OnInit {
     private activatedRoute: ActivatedRoute,
     private chdtRef: ChangeDetectorRef,
     private authServ: AuthService,
-    private snackBar: MatSnackBar,
-    // private custModalServ: CustomModalService
+    private portalBridgeService: PortalService,
   ) {
     this.initDynamicCategoriesForm();
   }
 
   ngOnInit(): void {
-    // this.custModalServ.show()
+    // const portal = new TemplatePortal(this.portalContent,);
+    // this.portalBridgeService.setPortal(this.portalContent);
+    // this.portalContent.attach()
+
 
     let isInitialCall = true;
     this.getUser();
@@ -176,9 +184,8 @@ export class ProductsListComponent implements OnInit {
   getUser() {
     this.authServ.getUserInfo().subscribe({
       next: (user) => console.log('user', user),
-      // error: (err) => this.snackBar.open('wrroongggg', 'x')
-      error: (err) => console.log('err.message')
-    })
+      error: (err) => this.portalBridgeService.open(ErrorMessageComponent, err.error),
+    });
   }
 
   onChange(paramName: string, value: string) {
@@ -394,4 +401,6 @@ export class ProductsListComponent implements OnInit {
   //     );
   //   }),
   // );
+
+  ngOnDestroy(): void {}
 }
