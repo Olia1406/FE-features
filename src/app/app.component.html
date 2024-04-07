@@ -5,7 +5,7 @@
     <span>FE features</span>
     <mat-list style="display: flex; align-items: center; margin-left: 10px; margin-top: 2px;">
         <a [routerLink]="['/products']" mat-flat-button color="primary">Products</a>
-        <a [routerLink]="['/info']" mat-flat-button color="primary">Info</a>
+        <a [routerLink]="['/user/info']" mat-flat-button color="primary">Info</a>
     </mat-list>
 
     <span class="product-spacer"></span>
@@ -18,3 +18,4 @@
     
 </mat-toolbar>
 <router-outlet></router-outlet>
+<app-custom-modal></app-custom-modal>

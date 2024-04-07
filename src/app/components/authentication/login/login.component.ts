@@ -19,7 +19,7 @@ export class LoginComponent {
 
     this.userServ.logIn({ email, password }).subscribe({
       next: (resp) => {
-        this.router.navigateByUrl('/info')
+        this.router.navigateByUrl('/user/info')
       },
       error: (err) => console.log(err)
     });

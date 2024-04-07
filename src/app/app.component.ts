@@ -10,6 +10,8 @@ import { ProductsService } from './core/services/products.service';
 import { EX_TOKEN } from './shared/example-token';
 import { Product } from './shared/interfaces/product.interface';
 import { UsersService } from './core/services/users.service';
+import { CustomModalComponent } from './shared/custom modal/custom-modal/custom-modal.component';
+import { PortalModule } from '@angular/cdk/portal';
 
 @Component({
   selector: 'app-root',
@@ -23,7 +25,9 @@ import { UsersService } from './core/services/users.service';
     MatListItem,
     MatNavList,
     MatButtonModule,
-    RouterModule
+    RouterModule,
+    PortalModule,
+    CustomModalComponent
   ],
   providers: [
     ProductsService,
@@ -60,4 +64,11 @@ export class AppComponent {
   title = 'FE-features';
 
   constructor() { }
+
+  // + TODO: canActivate на is not loggin на компонентк логін і реєстрацію 
+  // error handling, show custom notification use cdk portal 
+
+
+
+  // зробитии кешування (тоді коли фільтри по категорії ті самі) продуктів правильніше
 }
