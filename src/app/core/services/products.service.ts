@@ -5,7 +5,7 @@ import {
   HttpRequest,
 } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, of, tap } from 'rxjs';
+import { Observable, delay, of, tap } from 'rxjs';
 import { Product } from '../../shared/interfaces/product.interface';
 const URL = 'http://localhost:4200/';
 
@@ -31,7 +31,13 @@ export class ProductsService {
     }
     return this.http
       .get<Product[]>(`${URL}api/products`, options)
-      .pipe(tap((products) => (this.cachedProducts = products)));
+      .pipe(
+        delay(1000),
+        tap((products) => {
+
+        this.currentCategory = categorySearchParams;
+        this.cachedProducts = products
+      }));
   }
 
   addProduct(productBody: any): Observable<any> {

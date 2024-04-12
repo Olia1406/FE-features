@@ -8,3 +8,4 @@ export const EX_TOKEN_WITH_DATA = new InjectionToken<Number>('server_can_be_the_
         return 12
     }
 });
+export const DATA_INJECTION_TOKEN = new InjectionToken<string>('DATA_INJECTION_TOKEN');

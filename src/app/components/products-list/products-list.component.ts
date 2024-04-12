@@ -1,9 +1,14 @@
 import {
+  ChangeDetectorRef,
   Component,
   ElementRef,
   Inject,
+  Injector,
+  OnDestroy,
   OnInit,
+  TemplateRef,
   ViewChild,
+  ViewContainerRef,
 } from '@angular/core';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -12,10 +17,16 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { ProductsService } from '../../core/services/products.service';
 import { Product } from '../../shared/interfaces/product.interface';
-import { FormBuilder, FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormControl,
+  FormsModule,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { PRODUCT_CATEGORIES } from '../../shared/constants';
 import { fullImageSrc } from '../../shared/helpers/fullImageSrc';
 import {
@@ -26,17 +37,15 @@ import {
   switchMap,
   tap,
 } from 'rxjs/operators';
-import {
-  BehaviorSubject,
-  Observable,
-  combineLatest,
-  fromEvent,
-} from 'rxjs';
+import { BehaviorSubject, Observable, combineLatest, fromEvent } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { MatInputModule } from '@angular/material/input';
-import { EX_TOKEN } from '../../shared/example-token';
+import { DATA_INJECTION_TOKEN, EX_TOKEN } from '../../shared/example-token';
 import { MatSelect, MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Params, Router } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
+import { PortalService } from '../../shared/components/portal.service';
+import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
 
 @Component({
   selector: 'app-products-list',
@@ -44,6 +53,7 @@ import { ActivatedRoute, Params, Router } from '@angular/router';
   imports: [
     CommonModule,
     MatCardModule,
+    MatButtonModule,
     MatButtonModule,
     MatIconModule,
     MatSidenavModule,
@@ -53,15 +63,19 @@ import { ActivatedRoute, Params, Router } from '@angular/router';
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    // CdkPortal,
+    // ComponentPortal
   ],
-  templateUrl: './products-list.component.html',
+  templateUrl: './products-list-form.component.html',
   styleUrl: './products-list.component.scss',
 })
-export class ProductsListComponent implements OnInit {
+export class ProductsListComponent implements OnInit, OnDestroy {
   @ViewChild('descriptionSearch', { static: true, read: ElementRef })
   descriptionSearch!: ElementRef;
   @ViewChild('matSelect', { static: true })
   matSelect!: MatSelect;
+  // @ViewChild('portalContent', { read: TemplateRef, static: true }) portalContent!: TemplateRef<unknown>;
+  // @ViewChild(CdkPortal, {static: true }) portalContent!: CdkPortal;
 
   products$!: Observable<Product[]>;
   categoriesForm = this.fb.group({});
@@ -69,105 +83,113 @@ export class ProductsListComponent implements OnInit {
   searchControl: FormControl = this.fb.control('');
   sortSubject = new BehaviorSubject('asc');
 
+  description = '';
+  sort = 'asc';
+  name = '';
+
   constructor(
     @Inject('def-sort-field') private sortField: any,
     @Inject(EX_TOKEN) private prodServ: ProductsService,
     private fb: FormBuilder,
     private router: Router,
     private activatedRoute: ActivatedRoute,
+    private chdtRef: ChangeDetectorRef,
+    private authServ: AuthService,
+    private portalBridgeService: PortalService,
   ) {
     this.initDynamicCategoriesForm();
   }
 
   ngOnInit(): void {
-    this.searchControl.setValue(this.activatedRoute.snapshot.queryParamMap.get('prodName') || '');
-    this.descriptionSearch.nativeElement.value = this.activatedRoute.snapshot.queryParamMap.get('description') || '';
-    this.matSelect.value = this.activatedRoute.snapshot.queryParamMap.get('sortType') || '';
+    // const portal = new TemplatePortal(this.portalContent,);
+    // this.portalBridgeService.setPortal(this.portalContent);
+    // this.portalContent.attach()
 
-    this.prodServ.getInfo().subscribe();
 
-    const categoryStream$ = this.categoriesForm.valueChanges.pipe(
-      startWith(this.categoriesForm.value),
-      map((categories) => {
-        return Object.entries(categories)
-          .filter((entry) => entry[1])
-          .map((entry) => entry[0]);
-      }),
-      map((valArr) => valArr.join(',')),
-    );
-
-    const descriptionStream$ = fromEvent(
-      this.descriptionSearch.nativeElement,
-      'input',
-    ).pipe(
-      debounceTime(500),
-      distinctUntilChanged(),
-      startWith(this.descriptionSearch.nativeElement.value || ''),
-      map((inputEvent: any) => ((inputEvent?.target?.value as string ?? this.activatedRoute.snapshot.queryParamMap.get('description'))) || ''),
-    );
-
-    const nameSearchStream$: Observable<string> =
-      this.searchControl.valueChanges.pipe(
-        debounceTime(500),
-        distinctUntilChanged(),
-        startWith(this.searchControl.value)
-        );
-
-    const sortPriceStream$ = this.sortSubject;
-    this.sortSubject.next(this.matSelect.value);
-
-    combineLatest([
-      categoryStream$,
-      descriptionStream$,
-      nameSearchStream$,
-      sortPriceStream$,
-    ]).subscribe(([category, description, prodName, sortType]) => {
-      console.log([category, description, prodName, sortType])
-      this.setQueryParams({
-        category: category || null,
-        description,
-        prodName,
-        sortType,
-      });
-    });
+    let isInitialCall = true;
+    this.getUser();
 
     this.products$ = this.activatedRoute.queryParams.pipe(
+      map((qParams) => {
+        return {
+          category: qParams['category'] || '',
+          prodName: qParams['prodName'],
+          description: qParams['description'],
+          sortType: qParams['sortType'] || 'asc',
+        };
+      }),
+      tap((qParams) => {
+        // this.searchControl.setValue(qParams.prodName);
+        // this.descriptionSearch.nativeElement.value = qParams.description;
+        // this.matSelect.value = qParams.sortType;
+        if (isInitialCall) {
+          this.sort = qParams.sortType;
+          this.description = qParams.description;
+          this.name = qParams.prodName;
+          const selectedCat = qParams.category
+            .split(',')
+            .reduce((acc: any, category: string) => {
+              acc[category] = true;
+              return acc;
+            }, {});
+          this.categoriesForm.patchValue(selectedCat || {});
+          this.chdtRef.detectChanges();
+          isInitialCall = false;
+        }
+      }),
       switchMap((qParams: any) => {
-        return this.prodServ
-          .getProductsList(qParams.category)
-          .pipe(
-            map((products) =>
-              products
-                .filter(
-                  (prod: any) =>
-                    prod.description
-                      .toLowerCase()
-                      .includes(qParams.description.toLowerCase()) &&
-                    prod.name
-                      .toLowerCase()
-                      .includes(qParams.prodName.toLowerCase()),
+        console.log(qParams);
+        return this.prodServ.getProductsList(qParams.category).pipe(
+          map((products) =>
+            qParams.description
+              ? products.filter((prod: any) =>
+                  prod.description
+                    .toLowerCase()
+                    .includes(qParams.description.toLowerCase()),
                 )
-                .sort((a: any, b: any) =>
-                  this.sortField.sort(qParams.sortType, a, b),
-                ),
+              : products,
+          ),
+          map((products) =>
+            qParams.prodName
+              ? products.filter((prod: any) =>
+                  prod.name
+                    .toLowerCase()
+                    .includes(qParams.prodName.toLowerCase()),
+                )
+              : products,
+          ),
+          map((products) =>
+            products.sort((a: any, b: any) =>
+              this.sortField.sort(qParams.sortType, a, b),
             ),
-          );
+          ),
+        );
       }),
     );
-    // TODO: додати ще один гард який перевіряє роль юзера
 
-    // NOTE: here is the way to set params on each event separetly
-    // this.descriptionSearch.nativeElement.addEventListener(
-    //   'input',
-    //   (event: any) => {
-    //     this.setQueryParams('description', event.target.value);
-    //   },
-    // );
+    this.categoriesForm.valueChanges
+      .pipe(
+        map((categories) => {
+          return Object.entries(categories)
+            .filter((entry) => entry[1])
+            .map((entry) => entry[0]);
+        }),
+        map((valArr) => valArr.join(',')),
+      )
+      .subscribe((valueStr) => {
+        this.setQueryParams({ category: valueStr });
+      });
+  }
 
-    // this.searchControl.valueChanges.pipe(
-    //   debounceTime(500),
-    //   distinctUntilChanged(),
-    // ).subscribe((value: string) => this.setQueryParams('name', value))
+  getUser() {
+    this.authServ.getUserInfo().subscribe({
+      next: (user) => console.log('user', user),
+      error: (err) => this.portalBridgeService.open(ErrorMessageComponent, err.error),
+    });
+  }
+
+  onChange(paramName: string, value: string) {
+    this.setQueryParams({ [paramName]: value });
   }
 
   setQueryParams(queryParams = {}) {
@@ -176,6 +198,7 @@ export class ProductsListComponent implements OnInit {
       queryParams,
       queryParamsHandling: 'merge',
     });
+    // console.trace('this.setQueryParams', queryParams);
   }
 
   initDynamicCategoriesForm() {
@@ -255,6 +278,76 @@ export class ProductsListComponent implements OnInit {
     );
   }
 
+  // urlSetsFromStreams() {
+  // const categoryStream$ = this.categoriesForm.valueChanges.pipe(
+  //   startWith(this.categoriesForm.value),
+  //   map((categories) => {
+  //     return Object.entries(categories)
+  //       .filter((entry) => entry[1])
+  //       .map((entry) => entry[0]);
+  //   }),
+  //   map((valArr) => valArr.join(',')),
+  // );
+
+  // const descriptionStream$ = fromEvent(
+  //   this.descriptionSearch.nativeElement,
+  //   'input',
+  // ).pipe(
+  //   debounceTime(500),
+  //   distinctUntilChanged(),
+  //   startWith(this.descriptionSearch.nativeElement.value || ''),
+  //   map((inputEvent: any) => ((inputEvent?.target?.value as string ?? this.activatedRoute.snapshot.queryParamMap.get('description'))) || ''),
+  // );
+
+  // const nameSearchStream$: Observable<string> =
+  //   this.searchControl.valueChanges.pipe(
+  //     debounceTime(500),
+  //     distinctUntilChanged(),
+  //     startWith(this.searchControl.value)
+  //     );
+
+  // const sortPriceStream$ = this.sortSubject;
+  // this.sortSubject.next(this.matSelect.value);
+
+  // combineLatest([
+  //   categoryStream$,
+  //   descriptionStream$,
+  //   nameSearchStream$,
+  //   sortPriceStream$,
+  // ]).subscribe(([category, description, prodName, sortType]) => {
+  //   console.log([category, description, prodName, sortType])
+  //   this.setQueryParams({
+  //     category: category || null,
+  //     description,
+  //     prodName,
+  //     sortType,
+  //   });
+  // });
+  // this.products$ = this.activatedRoute.queryParams.pipe(
+  //   switchMap((qParams: any) => {
+  //     return this.prodServ
+  //       .getProductsList(qParams.category)
+  //       .pipe(
+  //         map((products) =>
+  //           products
+  //             .filter(
+  //               (prod: any) =>
+  //                 prod.description
+  //                   .toLowerCase()
+  //                   .includes(qParams.description?.toLowerCase()) &&
+  //                 prod.name
+  //                   .toLowerCase()
+  //                   .includes(qParams.prodName.toLowerCase()),
+  //             )
+  //             .sort((a: any, b: any) =>
+  //               this.sortField.sort(qParams.sortType, a, b),
+  //             ),
+  //         ),
+  //       );
+  //   }),
+  // );
+  // }
+
   // NOTE: the first version of one stream  // didn't work correctly
 
   // this.products$ = this.categoriesForm.valueChanges.pipe(
@@ -308,4 +401,6 @@ export class ProductsListComponent implements OnInit {
   //     );
   //   }),
   // );
+
+  ngOnDestroy(): void {}
 }
