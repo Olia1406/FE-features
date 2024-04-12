@@ -1,0 +1,14 @@
+<h3>Sign in</h3>
+<form class="login-form" (submit)="onLoginFormSubmit($event, email.value, password.value)">
+  <div>
+    <input type="email" placeholder="Please enter email" #email/>
+  </div>
+  <div>
+    <input type="password" placeholder="Please enter password" #password/>
+  </div>
+
+  <button type="submit">submit</button>
+</form>
+<br>
+<p>Not registered?</p>
+<a [routerLink]="['/register']">Register</a>

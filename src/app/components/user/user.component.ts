@@ -15,6 +15,8 @@ import { tap } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { fullImageSrc } from '../../shared/helpers/fullImageSrc';
 import { PRODUCT_CATEGORIES } from '../../shared/constants';
+import { UsersService } from '../../core/services/users.service';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-user',
@@ -47,11 +49,11 @@ export class UserComponent implements OnInit {
   selectedImgSrc = '';
   currentFile?: File | null;
 
-  constructor(private fb: FormBuilder, private prodServ: ProductsService) { }
+  constructor(private fb: FormBuilder, private prodServ: ProductsService, private authServ: AuthService) { }
   displayedColumns: string[] = ['name', 'description','category', 'image', 'price', 'del'];
   productDataSource = new ProductDataSource(this.prodServ);
 
-  ngOnInit(): void { }
+  ngOnInit(): void {}
 
   onImageSelect(event: any): void {
     const selectedFiles = event.target.files;
