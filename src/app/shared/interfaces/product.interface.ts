@@ -5,5 +5,5 @@ export interface Product {
     category: string;
     image: any;
     price: number;
-    isLiked: boolean;
+    isLiked?: boolean;
 }

@@ -1,0 +1,18 @@
+@use "../../../../styles/variables" as *;
+
+.error-message {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 50vw;
+    min-height: 70px;
+    position: fixed;
+    bottom: 10px;
+    left: 25vw;
+    z-index: 100;
+    margin: 0 auto;
+    padding: 4px 20px;
+    color: white;
+    background-color: $rosso-color;
+    border-radius: 6px;
+}

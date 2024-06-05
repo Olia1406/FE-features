@@ -1,0 +1,77 @@
+<div class="list-container">
+  <table class="list-table" cdk-table [dataSource]="orderDataSourse">
+    <!-- @for(column of displayedOrderColumns; track column) {
+        <ng-container [cdkColumnDef]="column">
+            <th cdk-header-cell *cdkHeaderCellDef>{{column}}</th>
+            <td cdk-cell *cdkCellDef="let element">{{ element[column] }}</td>
+          </ng-container>
+      } -->
+
+    <!-- idUser Column -->
+    <ng-container cdkColumnDef="name">
+      <th cdk-header-cell *cdkHeaderCellDef>{{'Name' | translate}}</th>
+      <td cdk-cell *cdkCellDef="let element">{{ element.name }}</td>
+    </ng-container>
+
+    <!-- wayToPayId Column -->
+    <ng-container cdkColumnDef="wayToPayId">
+      <th cdk-header-cell *cdkHeaderCellDef>{{'Way to pay' | translate }}</th>
+      <td cdk-cell *cdkCellDef="let element">{{ element.wayToPayId | translate}}</td>
+    </ng-container>
+
+    <!-- Address Column -->
+    <ng-container cdkColumnDef="address">
+      <th cdk-header-cell *cdkHeaderCellDef>{{'Address' | translate }}</th>
+      <td cdk-cell *cdkCellDef="let element">{{ element.address }}</td>
+    </ng-container>
+
+    <!-- Product list Column -->
+    <ng-container cdkColumnDef="productsList">
+      <th cdk-header-cell *cdkHeaderCellDef>Products list</th>
+      <td cdk-cell *cdkCellDef="let element" style="width: fit-content">
+        <button mat-flat-button [matMenuTriggerFor]="prodList">
+          {{'Products' | translate}}
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #prodList="matMenu" class="prods-in-table">
+          <mat-list
+            role="list"
+            style="width: fit-content; max-width: fit-content"
+          >
+            @for (prod of element.productsList; track prod._id) {
+              <mat-list-item
+                role="listitem"
+                class="prods-list-item"
+                style="width: fit-content"
+              > 
+                <img [src]="getImageSrc(prod.image)"/> 
+                <span>{{ prod.name }}</span> 
+                <span>{{ prod.price | currency }}</span> _x_
+                <span>{{ prod.qty }}</span> 
+              </mat-list-item>
+            }
+          </mat-list>
+        </mat-menu>
+      </td></ng-container
+    >
+
+    <!-- Delivered Column -->
+    <ng-container cdkColumnDef="isDelivered">
+      <th cdk-header-cell *cdkHeaderCellDef>Is Delivered</th>
+      <td cdk-cell *cdkCellDef="let element">{{ element.isDelivered }}</td>
+    </ng-container>
+
+    <ng-container cdkColumnDef="edit">
+      <th cdk-header-cell *cdkHeaderCellDef>Edit</th>
+      <td cdk-cell *cdkCellDef="let element">
+        <button mat-icon-button color="accent">
+          <!-- (click)="onProductEdit(element._id)" -->
+          <mat-icon>edit</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr cdk-header-row *cdkHeaderRowDef="displayedOrderColumns"></tr>
+    <tr cdk-row *cdkRowDef="let row; columns: displayedOrderColumns"></tr>
+  </table>
+</div>

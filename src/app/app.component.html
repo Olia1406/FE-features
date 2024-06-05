@@ -1,20 +1,55 @@
 <mat-toolbar color="primary" class="mat-app-background">
-    <button mat-icon-button aria-label="Product icon-button with menu icon">
-        <mat-icon>menu</mat-icon>
-    </button>
-    <span>FE features</span>
-    <mat-list style="display: flex; align-items: center; margin-left: 10px; margin-top: 2px;">
-        <a [routerLink]="['/products']" mat-flat-button color="primary">Products</a>
-        <a [routerLink]="['/user/info']" mat-flat-button color="primary">Info</a>
+  <button mat-icon-button aria-label="Product icon-button with menu icon">
+    <mat-icon>menu</mat-icon>
+  </button>
+  <span>FE features</span>
+  <mat-list
+    style="
+      display: flex;
+      align-items: center;
+      margin-left: 10px;
+      margin-top: 2px;
+    "
+  >
+    <a [routerLink]="['/products']" mat-flat-button color="primary">Products</a>
+    <a [routerLink]="['/user/info']" mat-flat-button color="primary">Info</a>
+  </mat-list>
+  <span class="product-spacer"></span>
+
+  <ng-template [cdkPortalOutlet]="cartPortal$ | async"></ng-template>
+
+  @if ((isAdmin$ | async) && (isLogginedUser$ | async)) {
+    <a
+      [routerLink]="['/user']"
+      [queryParams]="{ selectedTabIndex: 1 }"
+      mat-icon-button
+    >
+      <mat-icon>tune</mat-icon>
+    </a>
+  }
+
+  <button mat-icon-button [matMenuTriggerFor]="logging">
+    <mat-icon>account_circle</mat-icon>
+  </button>
+  <mat-menu #logging="matMenu">
+    <mat-list role="list" style="width: fit-content; max-width: fit-content">
+      <a [routerLink]="['/login']" mat-list-item>Login </a>
+      <a (click)="loguot()" mat-list-item>Logout </a>
+      <a [routerLink]="['/register']" mat-list-item>Register </a>
     </mat-list>
-    <span class="product-spacer"></span>
-    <a [routerLink]="['/user']" mat-icon-button>
-            <mat-icon>person</mat-icon>
-    </a>
-    <a [routerLink]="['/login']" mat-icon-button>
-        <mat-icon>login</mat-icon>
-    </a>
-    
+  </mat-menu>
+
+  <button mat-icon-button [matMenuTriggerFor]="lang">
+    <mat-icon>settings</mat-icon>
+  </button>
+
+  <mat-menu #lang="matMenu">
+    @for (language of languages; track language.name) {
+      <button mat-menu-item (click)="selectLanguage(language)">
+        <span>{{ language.name | translate }}</span>
+      </button>
+    } 
+  </mat-menu>
 </mat-toolbar>
-<app-portal></app-portal>
+<app-portal-place></app-portal-place>
 <router-outlet></router-outlet>

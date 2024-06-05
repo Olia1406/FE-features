@@ -1,17 +1,78 @@
 /* You can add global styles to this file, and also import other style files */
+@use 'sass:map';
+@use '@angular/material' as mat;
+@include mat.core();
+$primary: mat.define-palette(mat.$green-palette, 900);
+$accent: mat.define-palette(mat.$light-green-palette, 300);
+$theme: mat.define-light-theme((
+  color: (primary: $primary, accent: $accent),
+));
+@include mat.all-component-themes($theme);
+@import "@angular/material/prebuilt-themes/deeppurple-amber.css";
+@import "styles/table";
 
-// @import "@angular/material/prebuilt-themes/purple-green.css"; 
-// @import "@angular/material/prebuilt-themes/pink-bluegrey.css"; 
-@import "@angular/material/prebuilt-themes/deeppurple-amber.css"; 
-// @import "@angular/material/prebuilt-themes/indigo-pink.css"; 
-@import "styles/table"; 
-@import "styles/mat.overrides"; 
-
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
 
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.mat-mdc-menu-panel.cart-menu {
+  max-width: fit-content;
+  padding: 0 20px;
+  h4 {
+    width: 600px;
+    border-bottom: 1px solid rgb(238, 241, 242);
+  }
+
+  .orders-list-item {
+    height: fit-content;
+    padding: 10px 30px 10px 0;
+    .mat-mdc-list-item-unscoped-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    img {
+      width: 60px;
+      height: 60px;
+      margin: 0 30px 0 0;
+    }
+  }
+  .confirm-btn {
+    margin: 0 20px 8px 0;
+  }
+}
+
+.mat-mdc-menu-panel.prods-in-table {
+  max-width: fit-content;
+  min-width: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  .prods-list-item {
+    height: fit-content;
+    padding: 10px 30px 10px 0;
+    .mat-mdc-list-item-unscoped-content {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    img {
+      width: 60px;
+      height: 60px;
+      margin: 0 30px;
+    }
+  }
 }

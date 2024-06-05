@@ -1,0 +1,24 @@
+<form [formGroup]="orderForm" class="order-form">
+  <h4>Please, fill all fields</h4>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Name</mat-label>
+    <input matInput formControlName="name" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Way to pay</mat-label>
+    <mat-select formControlName="wayToPay">
+      @for (wayToPay of waysToPay; track wayToPay) {
+        <mat-option [value]="wayToPay">{{ wayToPay }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline">
+    <mat-label>Address</mat-label>
+    <input matInput formControlName="address" />
+  </mat-form-field>
+
+  <button (click)="onOrderSubmit()" mat-flat-button color="primary" [disabled]="!orderForm.valid" mat-dialog-close>Confirm</button>
+</form>
