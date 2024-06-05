@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-import { UsersService } from '../../../core/services/users.service';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
+import { UsersService } from '@services/users.service';
 
 @Component({
   selector: 'app-registration',
@@ -10,12 +10,16 @@ import { RouterModule } from '@angular/router';
   styleUrl: './registration.component.scss',
 })
 export class RegistrationComponent {
-  constructor(private userServ: UsersService) {}
+  constructor(private userServ: UsersService, private router: Router) {}
 
-  onRegistFormSubmit(event: Event, email: string, password: string) {
+  onRegistFormSubmit(event: Event, email: string, password: string,) {
     event.preventDefault();
-    console.log(email, password);
 
-    this.userServ.reggister({ email, password }).subscribe();
+    this.userServ.reggister({ email, password }).subscribe({
+      next: () => {
+        this.router.navigate(['/login'])
+      }
+    }
+    );
   }
 }

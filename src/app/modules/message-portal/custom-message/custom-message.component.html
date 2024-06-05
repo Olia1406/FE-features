@@ -1,0 +1,5 @@
+<section class="error-message" [style]="{'backgroundColor': bgColor}">
+  <span>{{messageText}}</span>
+  <ng-container *ngComponentOutlet="innerComponent"></ng-container>
+  <button mat-icon-button (click)="close()"><mat-icon>close</mat-icon></button>
+</section>

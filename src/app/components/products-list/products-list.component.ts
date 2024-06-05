@@ -9,6 +9,7 @@ import {
   TemplateRef,
   ViewChild,
   ViewContainerRef,
+  afterNextRender,
 } from '@angular/core';
 
 import { MatButtonModule } from '@angular/material/button';
@@ -17,7 +18,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { ProductsService } from '../../core/services/products.service';
 import { Product } from '../../shared/interfaces/product.interface';
@@ -30,6 +30,7 @@ import {
 import { PRODUCT_CATEGORIES } from '../../shared/constants';
 import { fullImageSrc } from '../../shared/helpers/fullImageSrc';
 import {
+  catchError,
   debounceTime,
   distinctUntilChanged,
   map,
@@ -37,15 +38,27 @@ import {
   switchMap,
   tap,
 } from 'rxjs/operators';
-import { BehaviorSubject, Observable, combineLatest, fromEvent } from 'rxjs';
+import {
+  BehaviorSubject,
+  Observable,
+  combineLatest,
+  fromEvent,
+  of,
+} from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { MatInputModule } from '@angular/material/input';
-import { DATA_INJECTION_TOKEN, EX_TOKEN } from '../../shared/example-token';
+import { EX_TOKEN } from '../../shared/example-token';
 import { MatSelect, MatSelectModule } from '@angular/material/select';
-import { ActivatedRoute, Params, Router } from '@angular/router';
-import { AuthService } from '../../core/services/auth.service';
-import { PortalService } from '../../shared/components/portal.service';
-import { ErrorMessageComponent } from '../../shared/components/error-message/error-message.component';
+import { ActivatedRoute, Router } from '@angular/router';
+import { CartPortalService } from '../../modules/cart-portal/cart-portal.service';
+import { TemplatePortal } from '@angular/cdk/portal';
+import { MatListModule } from '@angular/material/list';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+
+import { getTotalPrice } from '@shared/helpers/getTotalSum';
+import { OrderComponent } from '../order/order.component';
+import { OrdersService } from '@services/orders.service';
 
 @Component({
   selector: 'app-products-list',
@@ -63,10 +76,12 @@ import { ErrorMessageComponent } from '../../shared/components/error-message/err
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    // CdkPortal,
-    // ComponentPortal
+    MatListModule,
+    MatMenuModule,
+    MatDialogModule,
   ],
-  templateUrl: './products-list-form.component.html',
+  providers: [],
+  templateUrl: './products-list.component.html',
   styleUrl: './products-list.component.scss',
 })
 export class ProductsListComponent implements OnInit, OnDestroy {
@@ -74,8 +89,7 @@ export class ProductsListComponent implements OnInit, OnDestroy {
   descriptionSearch!: ElementRef;
   @ViewChild('matSelect', { static: true })
   matSelect!: MatSelect;
-  // @ViewChild('portalContent', { read: TemplateRef, static: true }) portalContent!: TemplateRef<unknown>;
-  // @ViewChild(CdkPortal, {static: true }) portalContent!: CdkPortal;
+  @ViewChild('cartPortalContent', { static: true }) cartPortalContent: any;
 
   products$!: Observable<Product[]>;
   categoriesForm = this.fb.group({});
@@ -87,28 +101,42 @@ export class ProductsListComponent implements OnInit, OnDestroy {
   sort = 'asc';
   name = '';
 
+  wishList: (Product & { qty: number })[] = [];
+  getTotalPrice: (prodList: (Product & { qty: number })[]) => number;
+
   constructor(
     @Inject('def-sort-field') private sortField: any,
     @Inject(EX_TOKEN) private prodServ: ProductsService,
+    private orderServ: OrdersService,
     private fb: FormBuilder,
     private router: Router,
     private activatedRoute: ActivatedRoute,
     private chdtRef: ChangeDetectorRef,
-    private authServ: AuthService,
-    private portalBridgeService: PortalService,
+    private cartPortalServ: CartPortalService,
+    private viewContRef: ViewContainerRef,
+    public dialog: MatDialog,
   ) {
     this.initDynamicCategoriesForm();
+    afterNextRender(() => {
+      if (localStorage) {
+        this.wishList = this.orderServ.getLocalWishList();
+      }
+    });
+    this.getTotalPrice = getTotalPrice;
   }
 
   ngOnInit(): void {
-    // const portal = new TemplatePortal(this.portalContent,);
-    // this.portalBridgeService.setPortal(this.portalContent);
-    // this.portalContent.attach()
+    // ====================== NOTE: work with cart portal ============================
+    const cartPortal = new TemplatePortal(
+      this.cartPortalContent,
+      this.viewContRef,
+    );
+    this.cartPortalServ.setCartPortal(cartPortal as TemplatePortal);
+    // this.portalContent.attach();
+    // ====================== END: work with cart portal ============================
 
-
+    // ================== NOTE: getting and filtering product data ===================
     let isInitialCall = true;
-    this.getUser();
-
     this.products$ = this.activatedRoute.queryParams.pipe(
       map((qParams) => {
         return {
@@ -138,14 +166,13 @@ export class ProductsListComponent implements OnInit, OnDestroy {
         }
       }),
       switchMap((qParams: any) => {
-        console.log(qParams);
-        return this.prodServ.getProductsList(qParams.category).pipe(
+        return this.prodServ.getItems(qParams.category).pipe(
           map((products) =>
             qParams.description
               ? products.filter((prod: any) =>
                   prod.description
                     .toLowerCase()
-                    .includes(qParams.description.toLowerCase()),
+                    .includes(qParams.description?.toLowerCase()),
                 )
               : products,
           ),
@@ -154,7 +181,7 @@ export class ProductsListComponent implements OnInit, OnDestroy {
               ? products.filter((prod: any) =>
                   prod.name
                     .toLowerCase()
-                    .includes(qParams.prodName.toLowerCase()),
+                    .includes(qParams.prodName?.toLowerCase()),
                 )
               : products,
           ),
@@ -163,10 +190,12 @@ export class ProductsListComponent implements OnInit, OnDestroy {
               this.sortField.sort(qParams.sortType, a, b),
             ),
           ),
+          catchError((err) => {
+            return of([]);
+          }),
         );
       }),
     );
-
     this.categoriesForm.valueChanges
       .pipe(
         map((categories) => {
@@ -179,13 +208,7 @@ export class ProductsListComponent implements OnInit, OnDestroy {
       .subscribe((valueStr) => {
         this.setQueryParams({ category: valueStr });
       });
-  }
-
-  getUser() {
-    this.authServ.getUserInfo().subscribe({
-      next: (user) => console.log('user', user),
-      error: (err) => this.portalBridgeService.open(ErrorMessageComponent, err.error),
-    });
+    // =================== END: getting and filtering product data ===================
   }
 
   onChange(paramName: string, value: string) {
@@ -198,7 +221,6 @@ export class ProductsListComponent implements OnInit, OnDestroy {
       queryParams,
       queryParamsHandling: 'merge',
     });
-    // console.trace('this.setQueryParams', queryParams);
   }
 
   initDynamicCategoriesForm() {
@@ -221,62 +243,83 @@ export class ProductsListComponent implements OnInit, OnDestroy {
     return fullImageSrc(imagePath);
   }
 
-  getProdStream() {
-    const categoryFilterStream$ = this.categoriesForm.valueChanges.pipe(
-      startWith(this.categoriesForm.value),
-      map((categories) => {
-        return Object.entries(categories)
-          .filter((entry) => entry[1])
-          .map((entry) => entry[0]);
-      }),
-      switchMap((categoryQueryArr) => {
-        // return this.prodServ.getProductsList(categoryQueryArr); // becouse of changes in the servise
-        return this.prodServ.getProductsList(categoryQueryArr.join(','));
-      }),
-    );
-
-    const descriptionStream$ = fromEvent(
-      this.descriptionSearch.nativeElement,
-      'input',
-    ).pipe(
-      debounceTime(500),
-      distinctUntilChanged(),
-      startWith(this.descriptionSearch.nativeElement?.target?.value),
-      map((inputEvent: any) => inputEvent?.target?.value || ''),
-    );
-
-    const nameSearchStream$: Observable<string> =
-      this.searchControl.valueChanges.pipe(
-        debounceTime(500),
-        distinctUntilChanged(),
-        startWith(this.searchControl.value),
-      );
-
-    const sortPriceStream$ = this.sortSubject;
-
-    const searches$ = combineLatest([
-      descriptionStream$,
-      nameSearchStream$,
-      sortPriceStream$,
-    ]);
-
-    this.products$ = combineLatest([categoryFilterStream$, searches$]).pipe(
-      tap(([products, [descrSearch, nameSearch, sortOrder]]) =>
-        console.log(products, descrSearch, nameSearch, sortOrder),
-      ),
-      map(([products, [descrSearch, nameSearch, sortOrder]]) =>
-        products
-          .filter(
-            (prod: any) =>
-              prod.description
-                .toLowerCase()
-                .includes((descrSearch as string).toLowerCase()) &&
-              prod.name.toLowerCase().includes(nameSearch.toLowerCase()),
-          )
-          .sort((a: any, b: any) => this.sortField.sort(sortOrder, a, b)),
-      ),
-    );
+  addToCart(product: Product) {
+    this.orderServ.setLocalWishList(product);
+    this.wishList = this.orderServ.getLocalWishList();
   }
+
+  confirmOrder() {
+    const wishListShortInfo = this.wishList.map(({ _id, qty }) => ({
+      _id,
+      qty,
+    }));
+    this.dialog.open(OrderComponent, {
+      data: wishListShortInfo,
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.cartPortalServ.close();
+  }
+
+  // =============== NOTE: get product stream prev version ==============
+  // getProdStream() {
+  //   const categoryFilterStream$ = this.categoriesForm.valueChanges.pipe(
+  //     startWith(this.categoriesForm.value),
+  //     map((categories) => {
+  //       return Object.entries(categories)
+  //         .filter((entry) => entry[1])
+  //         .map((entry) => entry[0]);
+  //     }),
+  //     switchMap((categoryQueryArr) => {
+  //       // return this.prodServ.getProductsList(categoryQueryArr); // becouse of changes in the servise
+  //       return this.prodServ.getItems(categoryQueryArr.join(','));
+  //     }),
+  //   );
+
+  //   const descriptionStream$ = fromEvent(
+  //     this.descriptionSearch.nativeElement,
+  //     'input',
+  //   ).pipe(
+  //     debounceTime(500),
+  //     distinctUntilChanged(),
+  //     startWith(this.descriptionSearch.nativeElement?.target?.value),
+  //     map((inputEvent: any) => inputEvent?.target?.value || ''),
+  //   );
+
+  //   const nameSearchStream$: Observable<string> =
+  //     this.searchControl.valueChanges.pipe(
+  //       debounceTime(500),
+  //       distinctUntilChanged(),
+  //       startWith(this.searchControl.value),
+  //     );
+
+  //   const sortPriceStream$ = this.sortSubject;
+
+  //   const searches$ = combineLatest([
+  //     descriptionStream$,
+  //     nameSearchStream$,
+  //     sortPriceStream$,
+  //   ]);
+
+  //   this.products$ = combineLatest([categoryFilterStream$, searches$]).pipe(
+  //     tap(([products, [descrSearch, nameSearch, sortOrder]]) =>
+  //       console.log(products, descrSearch, nameSearch, sortOrder),
+  //     ),
+  //     map(([products, [descrSearch, nameSearch, sortOrder]]) =>
+  //       products
+  //         .filter(
+  //           (prod: any) =>
+  //             prod.description
+  //               .toLowerCase()
+  //               .includes((descrSearch as string).toLowerCase()) &&
+  //             prod.name.toLowerCase().includes(nameSearch.toLowerCase()),
+  //         )
+  //         .sort((a: any, b: any) => this.sortField.sort(sortOrder, a, b)),
+  //     ),
+  //   );
+  // }
+  // =============== END: get product stream prev version ==============
 
   // urlSetsFromStreams() {
   // const categoryStream$ = this.categoriesForm.valueChanges.pipe(
@@ -348,7 +391,7 @@ export class ProductsListComponent implements OnInit, OnDestroy {
   // );
   // }
 
-  // NOTE: the first version of one stream  // didn't work correctly
+  // NOTE: the first version of one stream 
 
   // this.products$ = this.categoriesForm.valueChanges.pipe(
   //   startWith(this.categoriesForm.value),
@@ -401,6 +444,4 @@ export class ProductsListComponent implements OnInit, OnDestroy {
   //     );
   //   }),
   // );
-
-  ngOnDestroy(): void {}
 }

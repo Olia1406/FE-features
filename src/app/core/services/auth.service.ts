@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
 import { CookieService } from 'ngx-cookie-service';
-import { Observable, catchError, map, of, tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, map, of, shareReplay, tap } from 'rxjs';
 import { User } from '../../shared/interfaces/user.interface';
 
 @Injectable({
@@ -14,11 +14,8 @@ export class AuthService {
     return this._isAdmin;
   }
 
-  private _isLogginedUser = false;
-
-  get isLogginedUser() {
-    return this._isLogginedUser;
-  }
+  userData: any = null;
+  isAdmin$ = new BehaviorSubject(false);
 
   constructor(
     private cookieService: CookieService,
@@ -29,7 +26,6 @@ export class AuthService {
     return this.getUserInfo().pipe(
       map((res) => true),
       catchError((err) => {
-        this._isLogginedUser === false;
         return of(false);
       }),
     );
@@ -40,9 +36,13 @@ export class AuthService {
       .get<User>(`http://localhost:4200/api/users/user-info`)
       .pipe(
         tap((user: User) => {
-          this._isLogginedUser = true;
+          this.userData = user;
           this._isAdmin = user.role === 'admin';
+          this.isAdmin$.next(this._isAdmin);
         }),
+        shareReplay(1)
       );
   }
+
+
 }
